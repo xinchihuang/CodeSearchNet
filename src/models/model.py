@@ -38,7 +38,28 @@ def get_data_files_from_directory(data_dirs: List[RichPath],
     np.random.shuffle(files)  # This avoids having large_file_0, large_file_1, ... subsequences
     return files
 
-
+#### modified by xinchi huang
+def remove_stop_word(sample):
+    if sample['language'].startswith('python'):
+        stop_words = [
+            'False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await', 'break', 'class', 'continue', 'def',
+            'del',
+            'elif', 'else', 'except', 'finally', 'for', 'from', 'global', 'if', 'import', 'in', 'is', 'lambda',
+            'nonlocal',
+            'not', 'or', 'pass', 'raise', 'return', 'try', 'while', 'with', 'yield',
+            # '(', ')', '[', ']', '{', '}', ',', '\'', '\"', ':', '+', '-', '*', '/', '%', '=', '.', '+=', '-=', '==',
+            # '!=', '.',
+            # '"\\n"', '"\\t"', '>', '<'
+        ]
+    else:
+        stop_words = []
+    remove_list=[]
+    for t in sample['code_tokens']:
+        if t in stop_words:
+            remove_list.append(t)
+    for i in remove_list:
+        sample['code_tokens'].remove(i)
+####
 def parse_data_file(hyperparameters: Dict[str, Any],
                     code_encoder_class: Type[Encoder],
                     per_code_language_metadata: Dict[str, Dict[str, Any]],
@@ -50,6 +71,9 @@ def parse_data_file(hyperparameters: Dict[str, Any],
     for raw_sample in data_file.read_by_file_suffix():
         sample: Dict = {}
         language = raw_sample['language']
+        #### modified by xinchi huang
+        remove_stop_word(raw_sample)
+        ####
         if language.startswith('python'):  # In some datasets, we use 'python-2.7' and 'python-3'
             language = 'python'
 
@@ -401,6 +425,9 @@ class Model(ABC):
 
             for raw_sample in file_path.read_by_file_suffix():
                 sample_language = raw_sample['language']
+                ####modified by xinchi huang
+                remove_stop_word(raw_sample)
+                ####
                 self.__code_encoder_type.load_metadata_from_sample(raw_sample['code_tokens'],
                                                                    per_code_language_metadata[sample_language],
                                                                    self.hyperparameters['code_use_subtokens'],

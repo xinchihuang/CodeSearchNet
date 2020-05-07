@@ -63,6 +63,7 @@ from wandb.apis import InternalApi
 
 from dataextraction.python.parse_python_data import tokenize_docstring_from_string
 import model_restore_helper
+import gc
 
 def query_model(query, model, indices, language, topk=100):
     query_embedding = model.get_query_representations([{'docstring_tokens': tokenize_docstring_from_string(query),
@@ -111,9 +112,10 @@ if __name__ == '__main__':
         path=model_path,
         is_train=False,
         hyper_overrides={})
-    
     predictions = []
-    for language in ('python', 'go', 'javascript', 'java', 'php', 'ruby'):
+
+    for language in ('python',''):
+        # predictions = []
         print("Evaluating language: %s" % language)
         definitions = pickle.load(open('../resources/data/{}_dedupe_definitions_v2.pkl'.format(language), 'rb'))
         indexes = [{'code_tokens': d['function_tokens'], 'language': d['language']} for d in tqdm(definitions)]
@@ -128,11 +130,24 @@ if __name__ == '__main__':
         for query in queries:
             for idx, _ in zip(*query_model(query, model, indices, language)):
                 predictions.append((query, language, definitions[idx]['identifier'], definitions[idx]['url']))
-
+        ######
+        # print("finish "+language)
+        # df = pd.DataFrame(predictions, columns=['query', 'language', 'identifier', 'url'])
+        # df.to_csv('model_predictions_{}.csv'.format(language), index=False)
+        break
+        ######
     df = pd.DataFrame(predictions, columns=['query', 'language', 'identifier', 'url'])
     df.to_csv(predictions_csv, index=False)
-
-
+    # ######
+    # frames=[]
+    # for language in ('python', 'go', 'javascript', 'java', 'php', 'ruby'):
+    #     path = 'model_predictions_{}.csv'.format(language)
+    #     ndf = pd.read_csv(path)
+    #     frames.append(ndf)
+    # new_df = pd.concat(frames)
+    # new_df.to_csv(predictions_csv, index=False)
+    # #####
+    #
     if run_id:
         print('Uploading predictions to W&B')
         # upload model predictions CSV file to W&B
