@@ -1,0 +1,14 @@
+python: 0.292203302
+go: 0.115372674
+javascript: 0.128024427
+java: 0.196455293
+php: 0.158687348
+ruby: 0.153800662
+
+stopword python: 0.160823206
+less stop words(only word): 0.275305682
+special characters：0.201
+
+python 1dcnn:0.23
+character：0.155105531
+stopword:0.119512413
