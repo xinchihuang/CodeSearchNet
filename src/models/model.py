@@ -60,6 +60,52 @@ def remove_stop_word(sample):
     for i in remove_list:
         sample['code_tokens'].remove(i)
 ####
+#### modified by xinchi huang
+def change_stop_word(sample):
+    if sample['language'].startswith('python'):
+        # stop_words = [
+        #     'False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await', 'break', 'class', 'continue', 'def',
+        #     'del',
+        #     'elif', 'else', 'except', 'finally', 'for', 'from', 'global', 'if', 'import', 'in', 'is', 'lambda',
+        #     'nonlocal',
+        #     'not', 'or', 'pass', 'raise', 'return', 'try', 'while', 'with', 'yield',
+        # ]
+        stop_words = [
+            'False', 'None', 'True', 'as', 'assert', 'async', 'await', 'class', 'continue', 'def',
+            'del',
+              'finally', 'from', 'global', 'import', 'in', 'is', 'lambda',
+            'nonlocal',
+            'not', 'or', 'pass', 'raise', 'with', 'yield',
+        ]
+        # characters=[
+        #     '(', ')', '[', ']', '{', '}', ',', '\'', '\"', ':', '+', '-', '*', '/', '%', '=', '.', '+=', '-=', '==',
+        #     '!=', '.',
+        #     '"\\n"', '"\\t"', '>', '<'
+        # ]
+        characters = [
+             ',', '\'', '\"', ':'
+            '"\\n"', '"\\t"'
+        ]
+        q=[
+            '(', ')', '[', ']', '{', '}'
+        ]
+        o=[
+           '+', '-', '*', '/', '%', '=', '.', '+=', '-=', '==',
+            '!=', '>', '<'
+        ]
+    else:
+        stop_words = []
+    remove_list=[]
+    for i in range(len(sample['code_tokens'])):
+        if sample['code_tokens'] in stop_words:
+            sample['code_tokens'][i]="[w]"
+        elif sample['code_tokens'] in characters:
+            sample['code_tokens'][i] = "[c]"
+        elif sample['code_tokens'] in q:
+            sample['code_tokens'][i] = "[q]"
+        elif sample['code_tokens'] in o:
+            sample['code_tokens'][i] = "[o]"
+####
 def parse_data_file(hyperparameters: Dict[str, Any],
                     code_encoder_class: Type[Encoder],
                     per_code_language_metadata: Dict[str, Dict[str, Any]],
@@ -71,9 +117,12 @@ def parse_data_file(hyperparameters: Dict[str, Any],
     for raw_sample in data_file.read_by_file_suffix():
         sample: Dict = {}
         language = raw_sample['language']
-        #### modified by xinchi huang
-        remove_stop_word(raw_sample)
-        ####
+        # #### modified by xinchi huang
+        # remove_stop_word(raw_sample)
+        # ####
+        ### modified by xinchi huang
+        change_stop_word(raw_sample)
+        ###
         if language.startswith('python'):  # In some datasets, we use 'python-2.7' and 'python-3'
             language = 'python'
 
@@ -425,9 +474,12 @@ class Model(ABC):
 
             for raw_sample in file_path.read_by_file_suffix():
                 sample_language = raw_sample['language']
-                ####modified by xinchi huang
-                remove_stop_word(raw_sample)
-                ####
+                # ####modified by xinchi huang
+                # remove_stop_word(raw_sample)
+                # ####
+                ###modified by xinchi huang
+                change_stop_word(raw_sample)
+                ###
                 self.__code_encoder_type.load_metadata_from_sample(raw_sample['code_tokens'],
                                                                    per_code_language_metadata[sample_language],
                                                                    self.hyperparameters['code_use_subtokens'],
